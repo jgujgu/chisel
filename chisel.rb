@@ -11,6 +11,10 @@ class Chisel
 			x = x.delete("\t")
 			if x[0] == "#"
 				@new_document << pound_to_header(x) 
+			elsif x[0] == "*"
+				@new_document << unordered_lister(x)
+			elsif x[0][/\d/]
+				@new_document << ordered_lister(x)
 			else
 				@new_document << paragrapher(x)
 			end
@@ -43,6 +47,22 @@ class Chisel
 		end
 		new_string = new_string.gsub("&", "&amp;")
 	end
+
+	def unordered_lister(string)
+		list_array = string.split("\n")
+		new_array = []
+		list_array.each {|x| new_array << x.gsub("* ","<li>") + "</li>\n"}
+		"\n<ul>\n" + new_array.join + "</ul>\n"
+	end
+
+	def ordered_lister(string)
+		list_array = string.split("\n")
+		new_array = []
+		list_array.each do |x| 
+			new_array << x.gsub(/\d.\s/,"<li>") + "</li>\n"
+		end
+		"\n<ol>\n" + new_array.join + "</ol>\n"
+	end
 end
 
 # 1. convert document to string array by newlines
@@ -61,8 +81,20 @@ if __FILE__ == $0
 	"You just *have* to try the cheesecake," he said. "Ever since it appeared in
 	**Food & Wine** this place has been packed every night."'
 
+	ordered_list = "My favorite cuisines are:
+
+	1. Sushi
+	2. Barbeque
+	3. Mexican"
+
+	unordered_list = "My favorite cuisines are:
+
+	* Sushi
+	* Barbeque
+	* Mexican"
+
 	parser = Chisel.new
-	output = parser.parse(document)
+	output = parser.parse(ordered_list)
 	puts output
 
 	# parser = Chisel.new
